@@ -1,7 +1,7 @@
 use std::{ops::{Add, Sub, Mul, Div, }, f64::consts::PI};
 use rand::Rng;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Atom {
     pub qx: f64,
     pub qy: f64,

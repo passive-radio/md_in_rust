@@ -34,13 +34,14 @@ fn main() {
         vars: vars,
         k: 0.0,
         v: 0.0,
+        STEPS: 10,
+        OBSERVE: 10,
     };
 
     // md.makeconf("fcc".to_string());
     md.run();
     let num = md.number_of_atoms();
 
-    println!("{:?}", &num);
     println!("kinetic energy: {:?}", md.k,);
     println!("potential energy: {:?}", md.v);
 
