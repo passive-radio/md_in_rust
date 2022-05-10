@@ -3,12 +3,12 @@ use rand::Rng;
 
 #[derive(Debug)]
 pub struct Atom {
-    qx: f64,
-    qy: f64,
-    qz: f64,
-    px: f64,
-    py: f64, 
-    pz: f64,
+    pub qx: f64,
+    pub qy: f64,
+    pub qz: f64,
+    pub px: f64,
+    pub py: f64, 
+    pub pz: f64,
 }
 
 impl Atom {
@@ -25,7 +25,7 @@ pub struct VariablesMD {
 pub trait Variables {
 
     fn init_time(&mut self);
-    fn add_atoms(&mut self, x: f64, y: f64, z: f64);
+    fn add_atoms(&mut self, qx: f64, qy: f64, qz: f64, px: f64, py: f64, pz: f64);
     fn number_of_atoms(&self) -> i32;
     fn set_initial_velocity(&mut self, v0: f64);
     fn export_3dview(&self);
@@ -37,14 +37,14 @@ impl Variables for VariablesMD {
         self.time = 0.0;
     }
 
-    fn add_atoms(&mut self, x: f64, y: f64, z: f64) {
+    fn add_atoms(&mut self, qx: f64, qy: f64, qz: f64, px: f64, py: f64, pz: f64) {
         let mut atom: Atom = Atom::init();
-        atom.qx = x;
-        atom.qy = y;
-        atom.qz = z;
-        atom.px = 0.0; 
-        atom.py = 0.0;
-        atom.pz = 0.0;
+        atom.qx = qx;
+        atom.qy = qy;
+        atom.qz = qz;
+        atom.px = px; 
+        atom.py = py;
+        atom.pz = pz;
         self.atoms.push(atom);
     }
     
@@ -58,7 +58,7 @@ impl Variables for VariablesMD {
         let mut avz: f64 = 0.0;
         
         let mut rng = rand::thread_rng();
-        for n in 0..(self.atoms.len() -1 as usize) {
+        for n in 0..(self.atoms.len() as usize) {
             let i: f64 = rng.gen();
             let z = i * 2.0 - 1.0;
             let phi = 2.0 * i * PI;
