@@ -4,7 +4,7 @@ use crate::system::adjust_periodic;
 // #[derive(Debug)]
 pub trait Observer {
     fn kinetic_energy(&self, vars: &VariablesMD) -> f64;
-    fn potential_energy(&self, vars: &mut VariablesMD) -> f64;
+    fn potential_energy(&self, vars: &VariablesMD) -> f64;
     fn tempareture(&self, vars: &VariablesMD) -> f64;
     fn total_energy(&self, vars: &mut VariablesMD) -> f64;
 }
@@ -51,7 +51,7 @@ impl Observer for ObserverMD {
     } 
 
     //This function calculates and returns the potential energy of each atoms.
-    fn potential_energy(&self, vars: &mut VariablesMD) -> f64 {
+    fn potential_energy(&self, vars: &VariablesMD) -> f64 {
         let mut v: f64 = 0.0;
         let CL2: f64 = self.CUTOFF*self.CUTOFF;
         let RC2: f64 = 1.0 / CL2;
@@ -62,16 +62,27 @@ impl Observer for ObserverMD {
         let pn: i32 = vars.number_of_atoms();
         let atoms = &vars.atoms;
 
+        for i in 0..5 {
+            print!("{:?}", atoms[i]);
+        }
+
         for (i, atom_i) in atoms[0..].iter().enumerate() {
             for (j, atom_j) in atoms[i..].iter().enumerate() {
                 let mut dx: f64 = atom_j.qx - atom_i.qx;
                 let mut dy: f64 = atom_j.qy - atom_i.qy;
                 let mut dz: f64 = atom_j.qz - atom_i.qz;
+
                 
                 (dx, dy, dz) = adjust_periodic(dx, dy, dz);
 
+                // print!("{:?}, {:?}, {:?}", &dx, &dy, &dz);
+
                 let r2 = (dx*dx + dy*dy + dz*dz);
-                if &r2 > &CL2 {
+
+                // print!("r2: {:?}", &r2);
+                if r2 > CL2 {
+                    continue;
+                } else if r2 == 0.0 {
                     continue;
                 }
                 let r6: f64 = r2 * r2 * r2;

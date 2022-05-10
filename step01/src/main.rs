@@ -2,34 +2,46 @@
 mod variables;
 mod observer;
 mod system;
+mod md;
 
-// use crate::class::MD;
-// use crate::class::SimpleMD;
 use variables::{Atom, Variables, VariablesMD};
 use observer::{ObserverMD};
+use md::{MD};
 
-use crate::observer::Observer;
+use crate::{observer::Observer, md::MD_blueprint};
 
 
 fn main() {
     
-    let mut vars = VariablesMD {time: 0.0, atoms: vec![Atom::init()]};
+    let mut vars = VariablesMD {time: 0.0, atoms: Vec::<Atom>::new()};
     vars.init_time();
-    vars.add_atoms(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    vars.add_atoms(0.0, 2.0, 3.0, 1.0, 2.0, 3.0);
+    // vars.add_atoms(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    // vars.add_atoms(0.0, 2.0, 3.0, 1.0, 2.0, 3.0);
 
-    vars.set_initial_velocity(1.0);
+    // vars.set_initial_velocity(1.0);
     
     let observer = ObserverMD {
-        CUTOFF: 1.0,
+        CUTOFF: 10.0,
         L: 10,
         dt: 0.1,
     };
 
-    let kinetic = observer.kinetic_energy(&vars);
+    let mut md = MD {
+        dt: 0.1,
+        observer: observer,
+        state: false,
+        time: 0.0,
+        vars: vars,
+        k: 0.0,
+        v: 0.0,
+    };
 
-    println!("{:?}", vars.atoms);
-    println!("len of atoms (Vec<Atom>): {:?}", vars.atoms.len());
-    println!("kinetic energy: {:?}", &kinetic);
+    // md.makeconf("fcc".to_string());
+    md.run();
+    let num = md.number_of_atoms();
+
+    println!("{:?}", &num);
+    println!("kinetic energy: {:?}", md.k,);
+    println!("potential energy: {:?}", md.v);
 
 }
