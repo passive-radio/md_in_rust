@@ -1,6 +1,8 @@
 # Molecular Dynamics Simulation from scratch by Cpp, Rust
 
-reference: [分子動力学ステップ・バイ・ステップ　その1](https://qiita.com/kaityo256/items/2356fff922938ae3c87c)
+reference
+1. [分子動力学ステップ・バイ・ステップ by @kaityo256](https://github.com/kaityo256/mdstep.git)
+1. [tinymd by @tlhr](https://github.com/tlhr/tinymd.git)
 
 ## Limitation of the MD calculation build by this repository.
 
