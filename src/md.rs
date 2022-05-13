@@ -1,10 +1,11 @@
 //module to execute MD
-
-use std::time::{Duration, Instant};
-use std::thread::sleep;
+use std::time::{Instant};
 use crate::variables::{VariablesMD, Variables};
 use crate::observer::{ObserverMD, Observer};
 use crate::system::adjust_periodic;
+
+use log::{error, info, warn};
+use log4rs;
 
 pub trait MD_blueprint {
     fn makeconf(&mut self, conf_type: String);
@@ -34,8 +35,8 @@ impl MD_blueprint for MD{
     fn makeconf(&mut self, conf_type: String) {
 
         if conf_type == "fcc" {
-            const density: f64 = 0.50;
-            let s: f64 = 1.0 / (density*0.25).powf(1.0/3.0);
+            const DENSITY: f64 = 0.50;
+            let s: f64 = 1.0 / (DENSITY*0.25).powf(1.0/3.0);
             let hs: f64 = s * 0.5;        // half s
             let is: i32 = self.observer.L;
 
@@ -133,6 +134,11 @@ impl MD_blueprint for MD{
     }
 
     fn run(&mut self) {
+
+        log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
+
+        log::info!("md calculation started!");
+
         self.makeconf("fcc".to_string());
 
         print!("MD calculation started! \n");
@@ -141,10 +147,14 @@ impl MD_blueprint for MD{
             self.calculate();
         }
         let end = start.elapsed();
+        self.k = self.observer.kinetic_energy(&self.vars);
+        self.v = self.observer.potential_energy(&mut self.vars);
+        
+        log::info!("MD calculation successfully ended!");
+        log::info!("Elapsed time: {}.{:01} s", end.as_secs(), end.subsec_nanos() / 1_000_000);
         print!("MD calculation ended! (elapsed time: {}.{:01} s)\n", end.as_secs(), end.subsec_nanos() / 1_000_000);
+        
         // MD::makeconf(self, "fcc".to_string());
-        // self.k = self.observer.kinetic_energy(&self.vars);
-        // self.v = self.observer.potential_energy(&mut self.vars);
     }
 
     fn number_of_atoms(&self) -> i32{
