@@ -3,12 +3,18 @@ use std::time::{Instant};
 use crate::variables::{VariablesMD, Variables};
 use crate::observer::{ObserverMD, Observer};
 use crate::system::adjust_periodic;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
+use std::io::prelude::*;
 
 use log::{error, info, warn};
 use log4rs;
 
+use crate::utils::remove_whitespaces;
+
 pub trait MD_blueprint {
     fn makeconf(&mut self, conf_type: String);
+    fn makeinitcor(&mut self, file: &str) -> io::Result<()>;
     fn update_position(&mut self);
     fn calculate_force(&mut self);
     fn periodic(&mut self);
@@ -28,6 +34,7 @@ pub struct MD {
     pub v: f64,
     pub STEPS: i32,
     pub OBSERVE: i32,
+    pub cor_file: String
 }
 
 impl MD_blueprint for MD{
@@ -53,6 +60,41 @@ impl MD_blueprint for MD{
 
             self.vars.set_initial_velocity(1.0);
         }
+
+    }
+
+    fn makeinitcor(&mut self, filepath: &str) -> io::Result<()> {
+        const DENSITY: f64 = 0.50;
+        let s: f64 = 1.0 / (DENSITY*0.25).powf(1.0/3.0);
+        
+        // for result in BufReader::new(File::open(file)?).lines() {
+
+        let f = File::open(filepath)?;
+        let f = BufReader::new(f);
+    
+        for line in f.lines() {
+
+            let l = line.unwrap();
+    
+            let atom = &remove_whitespaces(&l[0..4]);
+            let atom_name = &remove_whitespaces(&l[12..16]);
+            
+            let x = remove_whitespaces(&l[30..38]);
+            let y = remove_whitespaces(&l[39..46]);
+            let z = remove_whitespaces(&l[47..54]);
+
+            print!("{}, {}, {}\n", x, y, z);
+
+            let x: f64 = x.parse().unwrap();
+            let y: f64 = y.parse().unwrap();
+            let z: f64 = z.parse().unwrap();
+
+            self.vars.add_atoms(x *s,y *s,z *s, 0.0, 0.0, 0.0);
+        }
+
+        self.vars.set_initial_velocity(1.0);
+    
+        Ok(())
     }
 
     fn update_position(&mut self) {
@@ -65,6 +107,7 @@ impl MD_blueprint for MD{
     }
 
     fn calculate_force(&mut self) {
+
         let pn: i32 = self.vars.number_of_atoms();
 
         let atoms = self.vars.atoms.to_vec();
@@ -139,7 +182,13 @@ impl MD_blueprint for MD{
 
         log::info!("md calculation started!");
 
-        self.makeconf("fcc".to_string());
+        // self.makeconf("fcc".to_string());
+        let cor_file: String = self.cor_file.clone();
+        let _ = self.makeinitcor(&cor_file);
+
+        let num = self.vars.number_of_atoms();
+
+        print!("num of atoms: {} \n", &num);
 
         print!("MD calculation started! \n");
         let start = Instant::now();

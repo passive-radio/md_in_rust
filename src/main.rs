@@ -3,10 +3,12 @@ mod variables;
 mod observer;
 mod system;
 mod md;
+mod utils;
 
 use variables::{Atom, Variables, VariablesMD};
 use observer::{ObserverMD};
 use md::{MD};
+
 
 use crate::{observer::Observer, md::MD_blueprint};
 
@@ -36,6 +38,7 @@ fn main() {
         v: 0.0,
         STEPS: 10,
         OBSERVE: 10,
+        cor_file: "temp/format.pdb".to_string()
     };
 
     // md.makeconf("fcc".to_string());
