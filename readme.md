@@ -4,6 +4,13 @@ reference
 1. [分子動力学ステップ・バイ・ステップ by @kaityo256](https://github.com/kaityo256/mdstep.git)
 1. [tinymd by @tlhr](https://github.com/tlhr/tinymd.git)
 
+## What this MD can do so far
+1. read PDB coordinates file as the init coordinates of the target molecule
+1. LJ potential
+1. export kinetic energy, potential energy in regard to MD steps
+1. export the 3D coorinates in the original format(which will be in PDB fotmat) in regard to MD steps
+1. visualize kinetic energy, potential energy, total energy in regard to MD steps using the extern library "Plotters"
+
 ## Limitations of the MD simulation I build in this repository
 
 1. Lennard-Jones potential is the only potential here we adopt as the potential which will be used to calculate the force between atoms.
