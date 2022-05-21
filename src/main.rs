@@ -23,22 +23,26 @@ fn main() {
     // vars.set_initial_velocity(1.0);
     
     let observer = ObserverMD {
-        CUTOFF: 10.0,
+        CUTOFF: 2.0,
         L: 10,
-        dt: 0.1,
+        // dt: 0.01,
     };
 
     let mut md = MD {
-        dt: 0.1,
+        dt: 0.001,
         observer: observer,
         state: false,
         time: 0.0,
         vars: vars,
         k: 0.0,
         v: 0.0,
-        STEPS: 10,
-        OBSERVE: 10,
-        cor_file: "temp/format.pdb".to_string()
+        STEPS: 10000,
+        OBSERVE: 100,
+        cor_file: "temp/format.pdb".to_string(),
+        save_file: "out7.csv".to_string(),
+        
+        margin_length: 0.5,
+        pairs: Vec::new(),
     };
 
     // md.makeconf("fcc".to_string());

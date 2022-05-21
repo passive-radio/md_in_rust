@@ -9,6 +9,16 @@ edition = "2021"
 rand = "0.6"
 log = "0.4.0"
 log4rs = "1.0.0"
+plotters = "0.3.1"
+csv = "1.1.6"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "mainviz"
+path = "src/visualize.rs"
 
 # [dependencies.variables]
 # path = "src/variables"

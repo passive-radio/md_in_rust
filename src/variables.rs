@@ -17,6 +17,17 @@ impl Atom {
     }
 }
 
+pub struct Pair {
+    pub i: i32,
+    pub j: i32,
+}
+
+
+
+impl Pair {
+
+}
+
 pub struct VariablesMD {
     pub time: f32,
     pub atoms: Vec<Atom>,
@@ -58,6 +69,9 @@ impl Variables for VariablesMD {
         let mut avz: f64 = 0.0;
         
         let mut rng = rand::thread_rng();
+        let rand: f64 = rng.gen();
+        print!("rand: {:?}\n", rand);
+
         for n in 0..(self.atoms.len() as usize) {
             let i: f64 = rng.gen();
             let z = i * 2.0 - 1.0;

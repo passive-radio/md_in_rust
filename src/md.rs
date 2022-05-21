@@ -1,6 +1,8 @@
 //module to execute MD
 use std::time::{Instant};
-use crate::variables::{VariablesMD, Variables};
+use std::fs::OpenOptions;
+use std::io::prelude::*;
+use crate::variables::{VariablesMD, Variables, Pair};
 use crate::observer::{ObserverMD, Observer};
 use crate::system::adjust_periodic;
 use std::fs::File;
@@ -22,6 +24,10 @@ pub trait MD_blueprint {
 
     fn number_of_atoms(&self) -> i32;
     fn calculate(&mut self);
+
+    fn calculate_force_pair(&mut self);
+    fn make_pair(&mut self);
+    fn check_pairlist(&mut self);
 }
 
 pub struct MD {
@@ -34,7 +40,10 @@ pub struct MD {
     pub v: f64,
     pub STEPS: i32,
     pub OBSERVE: i32,
-    pub cor_file: String
+    pub cor_file: String,
+    pub save_file: String,
+    pub margin_length: f64,
+    pub pairs: Vec<Pair>,
 }
 
 impl MD_blueprint for MD{
@@ -45,7 +54,7 @@ impl MD_blueprint for MD{
             const DENSITY: f64 = 0.50;
             let s: f64 = 1.0 / (DENSITY*0.25).powf(1.0/3.0);
             let hs: f64 = s * 0.5;        // half s
-            let is: i32 = self.observer.L;
+            let is: i32 = (self.observer.L as f64/s) as i32;
 
             for iz in 0..is {
                 for iy in 0..is {
@@ -59,6 +68,8 @@ impl MD_blueprint for MD{
             }
 
             self.vars.set_initial_velocity(1.0);
+            print!("atom 0: {:?}\n", self.vars.atoms[0]);
+            print!("atom 100: {:?}\n", self.vars.atoms[99]);
         }
 
     }
@@ -124,16 +135,21 @@ impl MD_blueprint for MD{
 
                 // print!("{:?}, {:?}, {:?}", &dx, &dy, &dz);
 
-                let r2 = (dx*dx + dy*dy + dz*dz);
+                let r2 = dx*dx + dy*dy + dz*dz;
 
                 // print!("r2: {:?}", &r2);
                 if r2 > CL2 {
                     continue;
-                } else if r2 == 0.0 {
-                    continue;
                 }
+                // } else if r2 == 0.0 {
+                //     continue;
+                // }
                 let r6: f64 = r2 * r2 * r2;
-                let df: f64 = (24.0 * r6 - 48.0) / (r6 * r6 * r2) * self.dt;
+                let df: f64 = 0.000000000004 * (24.0 * r6 - 48.0) * self.dt / (r6 * r6 * r2);
+
+                if i == 0 {
+                    // print!("atom 0 df: {:?} dx: {:?} dy: {:?} dz: {:?}\n", df, dx, dy, dz);
+                }
                 
                 self.vars.atoms[i].px += df*dx;
                 self.vars.atoms[i].py += df*dy;
@@ -143,6 +159,42 @@ impl MD_blueprint for MD{
                 self.vars.atoms[j].pz -= df*dz;
             }
         }
+    }
+
+    fn calculate_force_pair(&mut self) {
+
+    }
+
+    fn make_pair(&mut self) {
+        self.pairs.clear();
+        let pn: i32 = self.vars.number_of_atoms();
+
+        let atoms = self.vars.atoms.to_vec();
+
+        for (i, atom_i) in atoms[..(pn-1) as usize].iter().enumerate() {
+            for (j, atom_j) in atoms[i+1..].iter().enumerate() {
+                let mut dx: f64 = atom_j.qx - atom_i.qx;
+                let mut dy: f64 = atom_j.qy - atom_i.qy;
+                let mut dz: f64 = atom_j.qz - atom_i.qz;
+                (dx, dy, dz) = adjust_periodic(dx, dy, dz);
+
+                let r2: f64 = (dx*dx + dy*dy + dz*dz);
+                let CL2: f64 = self.observer.CUTOFF * self.observer.CUTOFF;
+
+                if (r2 > CL2) {
+                    continue;
+                }
+                let mut p: Pair = Pair{i: 0, j: 0};
+                p.i = i as i32;
+                p.j = j as i32;
+                self.pairs.push(p);
+
+            }
+        }
+    } 
+
+    fn check_pairlist(&mut self) {
+        
     }
 
     fn periodic(&mut self) {
@@ -170,9 +222,13 @@ impl MD_blueprint for MD{
 
     fn calculate(&mut self) {
         self.update_position();
+        // print!("atom 0 after update_pos: {:?}\n", &self.vars.atoms[0]);
         self.calculate_force();
+        // print!("atom 0 after calculate: {:?}\n", &self.vars.atoms[0]);
         self.update_position();
+        // print!("atom 0 after update_pos: {:?}\n", &self.vars.atoms[0]);
         self.periodic();
+        // print!("atom 0 after periodic: {:?}\n", &self.vars.atoms[0]);
         self.time += self.dt;
     }
 
@@ -182,9 +238,9 @@ impl MD_blueprint for MD{
 
         log::info!("md calculation started!");
 
-        // self.makeconf("fcc".to_string());
-        let cor_file: String = self.cor_file.clone();
-        let _ = self.makeinitcor(&cor_file);
+        self.makeconf("fcc".to_string());
+        // let cor_file: String = self.cor_file.clone();
+        // let _ = self.makeinitcor(&cor_file);
 
         let num = self.vars.number_of_atoms();
 
@@ -194,6 +250,23 @@ impl MD_blueprint for MD{
         let start = Instant::now();
         for i in 0..self.STEPS {
             self.calculate();
+            self.k = self.observer.kinetic_energy(&self.vars);
+            self.v = self.observer.potential_energy(&self.vars);
+
+            let mut file = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .append(true)
+                .open(&self.save_file)
+                .unwrap();
+
+            if let Err(e) = writeln!(file, "{},{}",self.k, self.v) {
+                eprint!("Couldn't write to file: {}", e);
+            }
+
+            if i % 100 == 0 {
+                print!("atom 0 at step {:?}: {:?}\n",i, &self.vars.atoms[0]);
+            }
         }
         let end = start.elapsed();
         self.k = self.observer.kinetic_energy(&self.vars);

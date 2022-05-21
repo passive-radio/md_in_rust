@@ -31,7 +31,7 @@ pub struct ObserverMD {
     
     pub CUTOFF: f64,
     pub L: i32,
-    pub dt: f32,
+    // pub dt: f32,
     
 }
 
@@ -47,7 +47,7 @@ impl Observer for ObserverMD {
             k += vars.atoms[n].pz * vars.atoms[n].pz;
         }
         k /= vars.number_of_atoms() as f64;
-        k
+        k * 0.000000000004 * 0.5
     } 
 
     //This function calculates and returns the potential energy of each atoms.
@@ -83,7 +83,7 @@ impl Observer for ObserverMD {
                 }
                 let r6: f64 = r2 * r2 * r2;
                 let r12: f64 = r6 * r6;
-                v += 4.0 * (1.0/ r12 - 1.0/ r6) + C0;
+                v += 0.000000000004 * (4.0 * (1.0/ r12 - 1.0/ r6) + C0);
             }
         }
         v /= pn as f64;
