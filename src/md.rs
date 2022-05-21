@@ -13,6 +13,7 @@ use log::{error, info, warn};
 use log4rs;
 
 use crate::utils::remove_whitespaces;
+use crate::utils::write_cor;
 
 pub trait MD_blueprint {
     fn makeconf(&mut self, conf_type: String);
@@ -41,9 +42,10 @@ pub struct MD {
     pub STEPS: i32,
     pub OBSERVE: i32,
     pub cor_file: String,
-    pub save_file: String,
+    pub potential_traj_file: String,
     pub margin_length: f64,
     pub pairs: Vec<Pair>,
+    pub cor_results_dir: String
 }
 
 impl MD_blueprint for MD{
@@ -257,7 +259,7 @@ impl MD_blueprint for MD{
                 .create(true)
                 .write(true)
                 .append(true)
-                .open(&self.save_file)
+                .open(&self.potential_traj_file)
                 .unwrap();
 
             if let Err(e) = writeln!(file, "{},{}",self.k, self.v) {
@@ -266,6 +268,8 @@ impl MD_blueprint for MD{
 
             if i % 100 == 0 {
                 print!("atom 0 at step {:?}: {:?}\n",i, &self.vars.atoms[0]);
+                let cor_file_path = self.cor_results_dir.to_string() + "/" + &i.to_string();
+                write_cor(&self.vars.atoms, cor_file_path)
             }
         }
         let end = start.elapsed();

@@ -39,8 +39,8 @@ fn main() {
         STEPS: 10000,
         OBSERVE: 100,
         cor_file: "temp/format.pdb".to_string(),
-        save_file: "out7.csv".to_string(),
-        
+        potential_traj_file: "out7.csv".to_string(),
+        cor_results_dir: "outputs/0".to_string(),
         margin_length: 0.5,
         pairs: Vec::new(),
     };
